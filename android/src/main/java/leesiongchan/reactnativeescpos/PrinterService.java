@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.Math;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import leesiongchan.reactnativeescpos.helpers.EscPosHelper;
 import leesiongchan.reactnativeescpos.utils.BitMatrixUtils;
 import static io.github.escposjava.print.Commands.*;
@@ -218,11 +221,26 @@ public class PrinterService {
 
             if (line.matches(".*\\{IMG\\[(.+)\\]\\}.*")) {
                 try {
-                    imageToWrite = generateImageByteArrayOutputStream(EscPosHelper.resizeImage(readImage(line.replaceAll(".*\\{IMG\\[(.+)\\]\\}.*", "$1"),context), printingWidth - DEFAULT_IMG_WIDTH_OFFSET, DEFAULT_IMG_MAX_HEIGHT)).toByteArray();
+                    int offset = DEFAULT_IMG_WIDTH_OFFSET;
+                    String iwoRegex = ".*\\{IWO:\\(\\d+)\\}.*"; 
+                    if(line.matches(iwoRegex)) {
+                        Pattern iwoPattern = Pattern.compile(iwoRegex);
+                        Matcher matcher = iwoPattern.matcher(line);
+                        offset = Integer.parseInt(matcher.group(1));
+                        line.replaceAll(iwoRegexm, "");
+                    }
+                    imageToWrite = generateImageByteArrayOutputStream(
+                        EscPosHelper.resizeImage(
+                            readImage(line.replaceAll(".*\\{IMG\\[(.+)\\]\\}.*", "$1"), context), 
+                            Math.max(printingWidth - Math.abs(offset), 0), 
+                            DEFAULT_IMG_MAX_HEIGHT
+                        )
+                    ).toByteArray();
                 } catch (IOException e) {
                     throw new IOException(e);
                 }
             }
+
 
             boolean bold = line.contains("{B}");
             boolean underline = line.contains("{U}");
