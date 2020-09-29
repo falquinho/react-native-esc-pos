@@ -219,13 +219,13 @@ public class PrinterService {
                 }
             }
 
-            if (line.matches(".*\\{IMG\\[(.+)\\]\\}.*")) {
+            String imgRegex = ".*\\{IMG\\[(.+)\\](?:\\}|:(\\d+)\\}).*";
+            Pattern imgPatter = Pattern.compile(imgRegex);
+            Matcher imgMatcher = imgPatter.matcher(line);
+            if (imgMatcher.find()) {
                 try {
                     int offset = DEFAULT_IMG_WIDTH_OFFSET;
-                    String iwoRegex = ".*\\{IWO:(\\d+)\\}.*"; 
-                    Pattern iwoPattern = Pattern.compile(iwoRegex);
-                    Matcher matcher = iwoPattern.matcher(line);
-                    if(matcher.find()) {
+                    if(matcher.group(2).length() > 0) {
                         offset = Integer.parseInt(matcher.group(1));
                     }
                     imageToWrite = generateImageByteArrayOutputStream(
